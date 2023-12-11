@@ -1,91 +1,84 @@
 "use client";
-import { logout } from "@/lib/auth";
-import { MD5, SHA1, SHA256 } from "crypto-js";
+import { useState, useEffect } from "react";
 import { base64url } from "jose";
+import { MD5, SHA1, SHA256 } from "crypto-js";
+import { logout } from "@/lib/auth";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-// Interfaces for types
-type ResultEncrypt = {
+
+type ResultDecrypt = {
   name: string;
   painText: string;
-  encryptText: string;
+  decryptText: string;
 };
 
 export default function Page() {
-  // Define your initial state
   const initialState = {
-    selectedEncryptions: [],
+    selectedDecryptions: [],
   };
-  const [selectedEncryptions, setSelectedEncryptions] = useState<string[]>(
-    initialState.selectedEncryptions
+
+  const [selectedDecryptions, setSelectedDecryptions] = useState<string[]>(
+    initialState.selectedDecryptions
   );
+  const [textToDecrypt, setTextToDecrypt] = useState<string>("");
 
-  const [text, setText] = useState<string>("");
-
-  const handleEncryptionSelect = (
+  const handleDecryptionSelect = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { checked, value } = event.target;
     if (checked) {
-      setSelectedEncryptions([...selectedEncryptions, value]);
+      setSelectedDecryptions([...selectedDecryptions, value]);
     } else {
-      setSelectedEncryptions(
-        selectedEncryptions.filter((encryption) => encryption !== value)
+      setSelectedDecryptions(
+        selectedDecryptions.filter((decryption) => decryption !== value)
       );
     }
   };
-  const listOfEncrypt = [
-    {
-      name: "md5",
-      function: MD5,
-    },
-    {
-      name: "sha1",
-      function: SHA1,
-    },
-    {
-      name: "sha256",
-      function: SHA256,
-    },
+
+  const listOfDecryptions = [
     {
       name: "base64",
-      function: base64url.encode,
+      function: (text: string) => {
+        const result = base64url.decode(text);
+        const bytes = new Uint8Array(result);
+        const resultString = String.fromCharCode.apply(null, Array.from(bytes));
+        return resultString;
+      },
     },
   ];
 
-  const [resultArray, setResultArray] = useState<ResultEncrypt[]>([]);
+  const [decryptedResult, setDecryptedResult] = useState<ResultDecrypt[]>([]);
 
-  const encryptText = (text: string): ResultEncrypt[] => {
-    const lists = listOfEncrypt
-      .filter((item) => selectedEncryptions.includes(item.name))
+  const decryptText = (text: string): ResultDecrypt[] => {
+    const lists = listOfDecryptions
+      .filter((item) => selectedDecryptions.includes(item.name))
       .map((item) => item);
 
     const results = lists.map((item) => {
-      const encryptText = item.function(text);
+      const decryptText = item.function(text);
       return {
         name: item.name,
         painText: text,
-        encryptText: encryptText.toString(),
+        decryptText: decryptText.toString(),
       };
     });
+
     return results;
   };
 
   const onInputChanged = (text: string) => {
     if (text === "") {
-      setResultArray([]);
+      setDecryptedResult(decryptText(text));
       return;
     }
-    setText(text);
-    const results = encryptText(text);
-
-    setResultArray(results);
+    setTextToDecrypt(text);
+    const result = decryptText(text);
+    setDecryptedResult(result);
   };
 
   useEffect(() => {
-    const results = encryptText(text);
-    setResultArray(results);
-  }, [selectedEncryptions]);
+    const result = decryptText(textToDecrypt);
+    setDecryptedResult(result);
+  }, [selectedDecryptions]);
 
   return (
     <>
@@ -93,7 +86,7 @@ export default function Page() {
         {/* encrypt and show output */}
         {/* header */}
         <div className="flex flex-row justify-between items-center">
-          <h1 className="text-3xl font-semibold">Encrypt</h1>
+          <h1 className="text-3xl font-semibold">Decrypt</h1>
           <div className="flex md:flex-row flex-col gap-4">
             <Link href={"/encrypt"}>
               <button className="bg-violet-500 text-white rounded-md py-1 px-4 hover:bg-violet-900 transition-all shadow-md disabled:shadow-none disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -123,7 +116,7 @@ export default function Page() {
           <div className="flex flex-col md:border-r border-gray-200 dark:border-gray-600 pr-8">
             <h1 className="text-xl font-semibold mb-4">รูปแบบการเข้ารหัส</h1>
             <ul className="w-48 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-              {listOfEncrypt.map((item, index) => {
+              {listOfDecryptions.map((item, index) => {
                 return (
                   <li
                     className="w-full border-b border-gray-200 rounded-t-lg dark:border-gray-600"
@@ -134,8 +127,8 @@ export default function Page() {
                         id={item.name}
                         type="checkbox"
                         value={item.name}
-                        onChange={handleEncryptionSelect}
-                        checked={selectedEncryptions.includes(item.name)}
+                        onChange={handleDecryptionSelect}
+                        checked={selectedDecryptions.includes(item.name)}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500"
                       />
                       <label
@@ -151,7 +144,7 @@ export default function Page() {
             </ul>
           </div>
           <div className="flex flex-col justify-center items-start w-full">
-            <h1 className="text-xl font-semibold mb-4">ข้อความที่จะเข้ารหัส</h1>
+            <h1 className="text-xl font-semibold mb-4">ข้อความที่จะถอดรหัส</h1>
             <textarea
               className="border w-full border-gray-200 rounded-lg shadow-md p-2"
               placeholder="Enter your text here"
@@ -160,8 +153,8 @@ export default function Page() {
               onChange={(e) => onInputChanged(e.target.value)}
             ></textarea>
 
-            {resultArray.length > 0 &&
-              resultArray.map((item, index) => {
+            {decryptedResult.length > 0 &&
+              decryptedResult.map((item, index) => {
                 return (
                   <div
                     className="flex flex-col justify-center items-center w-full mt-3"
@@ -177,7 +170,7 @@ export default function Page() {
                       <button
                         className="bg-violet-500 text-white rounded-md h-8 px-2 text-xs hover:bg-violet-900 transition-all shadow-md disabled:shadow-none disabled:bg-gray-400 disabled:cursor-not-allowed"
                         onClick={() =>
-                          navigator.clipboard.writeText(item.encryptText)
+                          navigator.clipboard.writeText(item.decryptText)
                         }
                       >
                         Copy
@@ -186,7 +179,7 @@ export default function Page() {
                     <textarea
                       className="w-full border border-gray-200 rounded-lg shadow-md p-2"
                       placeholder="Enter your text here"
-                      value={item.encryptText}
+                      value={item.decryptText}
                     ></textarea>
                   </div>
                 );

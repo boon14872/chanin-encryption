@@ -5,10 +5,9 @@ import type { NextRequest } from "next/server";
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
   // get the cookie value
-  const cookie = request.cookies.get("jwt");
+  const cookie = request.cookies.get("jwt")?.value;
   const redirectUrl = new URL("/", request.url);
   if (!cookie) {
-    // return a 401 if the cookie is missing
     return NextResponse.redirect(redirectUrl);
   }
   //   validate jwt token

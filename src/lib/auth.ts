@@ -35,7 +35,7 @@ const hashAdmin = {
 };
 
 export const checkEmailAndPassword = (email: string, password: string) => {
-  if (email === admin.email && password === admin.password) {
+  if (email === hashAdmin.email && password === hashAdmin.password) {
     return true;
   }
   return false;
