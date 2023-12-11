@@ -2,6 +2,7 @@
 import { logout } from "@/lib/auth";
 import { MD5, SHA1, SHA256 } from "crypto-js";
 import { base64url } from "jose";
+import { Metadata } from "next";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 // Interfaces for types
