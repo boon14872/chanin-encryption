@@ -11,6 +11,7 @@
   "dependencies": {
     "@styled-icons/material-twotone": "^10.47.0",
     "crypto-js": "^4.2.0",
+    "jose": "^5.1.3",
     "next": "14.0.4",
     "react": "^18",
     "react-dom": "^18",
