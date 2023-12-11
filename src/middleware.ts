@@ -19,6 +19,11 @@ export async function middleware(request: NextRequest) {
   if (!checkEmailAndPassword(`${email}`, `${password}`)) {
     return NextResponse.redirect(redirectUrl);
   }
+
+  // if have request url to / then redirect to /encrypt
+  if (request.url === "/") {
+    return NextResponse.redirect("/encrypt");
+  }
   return NextResponse.next();
 }
 
