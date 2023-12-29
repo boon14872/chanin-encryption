@@ -7,7 +7,10 @@ export async function middleware(request: NextRequest) {
   // get the cookie value
   const cookie = request.cookies.get("jwt")?.value;
   const redirectUrl = new URL("/", request.url);
-  if (!cookie) {
+  if (!cookie ) {
+    if (new URL(request.url).pathname === "/") {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(redirectUrl);
   }
   //   validate jwt token
@@ -19,15 +22,13 @@ export async function middleware(request: NextRequest) {
   if (!checkEmailAndPassword(`${email}`, `${password}`)) {
     return NextResponse.redirect(redirectUrl);
   }
-
-  // if have request url to / then redirect to /encrypt
-  if (request.url === "/") {
-    return NextResponse.redirect("/encrypt");
+  if (new URL(request.url).pathname === "/") {
+    return NextResponse.redirect(new URL("/encrypt", request.url));
   }
   return NextResponse.next();
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: "/encrypt",
+  matcher: ["/encrypt", "/decrypt", "/"],
 };
